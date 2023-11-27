@@ -8,7 +8,6 @@ const nodemailer = require("nodemailer")
 const axios = require("axios");
 const Cheerio =require("cheerio");
 
-
 const transporter = nodemailer.createTransport({
   host:'smtp.gmail.com',
   port:587,
@@ -20,16 +19,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const getdata = async (ids) => {
+const getdata = async (id) => {
   try {
-    return await User.findOne({
-      include: [
-        {
-          model:address
-        },
-      ],
-      raw: true,
-    },{where:{id:ids}});
+    return await User.findOne({include: address},{where:{id:id}});
   } catch (error) {
     console.error("Error retrieving data:", error);
     throw error;
@@ -62,7 +54,7 @@ const verifyemail = async (data) =>{
     if(emailexist){
     const token = jwt.sign(
         { email: emailexist.email, id: emailexist._id },
-        config.secretKey,
+        config.ACCESS_TOKEN_SECRET,
         {expiresIn:config.FPASS_EXPIRESIN}
       );
 
@@ -100,17 +92,22 @@ const userlogin = async(data) =>{
     const pass = bcrypt.compare(userData.password , data.password)
     
     if(pass && userData){
-        const token = jwt.sign(
+        const accessToken = jwt.sign(
             { email: userData.email, id: userData.id },
-            config.secretKey,
-            {expiresIn:config.JWT_EXPIRES_IN}
+            config.ACCESS_TOKEN_SECRET,
+            {expiresIn:config.ACCESS_TOKEN_EXPIRES}
         );
+        const refreshToken = jwt.sign({
+            username: userData.email, id:userData.id, 
+        }, config.REFRESH_TOKEN_SECRET, 
+        { expiresIn: '1d' }); 
+         
         await userToken.create({
           user_id:userData.id,
-          token: token,
+          token: accessToken,
           expiry: config.JWT_EXPIRES_IN
         });
-        return token;
+        return {accessToken,refreshToken};
     }else{
         return false
     }

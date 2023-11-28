@@ -20,7 +20,7 @@ exports.signin = async (req, res) => {
     res.cookie('jwt', loggedin.refreshToken, { httpOnly: true,  
       sameSite: 'None', secure: true,  
       maxAge: 24 * 60 * 60 * 1000 
-    }); 
+    });
     res.status(200).send(loggedin.accessToken);
   }
 };
@@ -162,6 +162,15 @@ exports.aggregate = async (req,res) => {
   try {
     const data = await userServices.findByAggregate()
     res.status(201).send({success: "true", message: "userdata found", Data : data });
+  } catch (error) {
+    res.status(401).send({success: "false",error});
+  }
+}
+
+exports.refreshuser = async (req,res) => {
+  try {
+    const token = await userServices.generateToken(req.data.email)
+    res.status(200).send(token);
   } catch (error) {
     res.status(401).send({success: "false",error});
   }

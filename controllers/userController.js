@@ -1,7 +1,5 @@
-const cookieparser = require('cookie-parser'); 
 const express = require("express");
 const app = express();
-app.use(cookieparser())
 const userServices = require("../services/userservices")
 
 exports.signup = async (req, res) => {
@@ -17,9 +15,9 @@ exports.signin = async (req, res) => {
     return res.status(401).send({ success: false, msg: "Email or Password is wrong" });
   } else {
     // Assigning refresh token in http-only cookie  
-    res.cookie('jwt', loggedin.refreshToken, { httpOnly: true,  
+    res.cookie('refresh_token', loggedin.refreshToken, { httpOnly: true,  
       sameSite: 'None', secure: true,  
-      maxAge: 24 * 60 * 60 * 1000 
+      maxAge: 24 * 60 * 60 * 1000
     });
     res.status(200).send(loggedin.accessToken);
   }
@@ -169,8 +167,12 @@ exports.aggregate = async (req,res) => {
 
 exports.refreshuser = async (req,res) => {
   try {
-    const token = await userServices.generateToken(req.data.email)
-    res.status(200).send(token);
+    const token = await userServices.generateToken(req.data)
+    res.cookie('refresh_token', token.refreshToken, { httpOnly: true,  
+      sameSite: 'None', secure: true,
+      maxAge: 24 * 60 * 60 * 1000
+    });
+    res.status(200).send(token.accessToken);
   } catch (error) {
     res.status(401).send({success: "false",error});
   }

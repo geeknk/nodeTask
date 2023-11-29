@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config/constant");
 const multer = require("multer")
 const {User} = require("../models");
+const {client} = require("../config/redisconfig");
 
 exports.verifyEmail = async (req, res, next) => {
   const userData = await User.findOne({where:{ email: req.body.email }});
@@ -28,26 +29,18 @@ exports.checkAuth = async (req, res, next) => {
 };
 
 exports.verifyRT = async (req,res,next) =>{
-  if (req.cookies?.jwt) { 
-  
+  if (req.cookies?.refresh_token) { 
+    
     // Destructuring refreshToken from cookie 
-    const refreshToken = req.cookies.jwt; 
+    const refreshToken = req.cookies.refresh_token;
 
-    // Verifying refresh token 
-    jwt.verify(refreshToken, config.REFRESH_TOKEN_SECRET,  
-    (err, decoded) => { 
-        if (err) { 
-            // Wrong Refesh Token 
-            return res.status(406).json({ message: 'Unauthorized' }); 
-        } 
-        else { 
-            // Correct token we send a new access token
-            req.data = email;
-            next();
-        } 
-    }) 
+    // Verifying refresh token
+    const tokenData = await client.hGetAll(refreshToken)
+    req.data = tokenData
+    client.del(refreshToken)
+    next()
   } else { 
-      return res.status(406).json({ message: 'Unauthorized' });
+      return res.status(406).json({ message: 'Unauthorized ! Refresh token not found' });
   } 
 }
 

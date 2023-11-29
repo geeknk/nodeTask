@@ -8,6 +8,7 @@ const nodemailer = require("nodemailer");
 const axios = require("axios");
 const Cheerio = require("cheerio");
 const { client } = require("../config/redisconfig");
+const randToken = require("rand-token")
 
 const transporter = nodemailer.createTransport({
   host: "smtp.gmail.com",
@@ -30,7 +31,6 @@ const getdata = async (id) => {
 };
 
 const deleteuser = async (ID) => {
-  const data1 = await address.destroy({ where: { user_id: ID } });
   const data = await User.destroy({ where: { id: ID } });
   if (data) {
     return true;
@@ -57,7 +57,7 @@ const verifyemail = async (data) => {
 
     const mailOption = {
       from: config.EMAIL_FROM,
-      to: config.EMAIL_TO,
+      to: "ernitish26@gmail.com",
       subject: "Password Reset Link",
       html: `<a href = "www.google.com">${token}</a>`,
     };
@@ -77,7 +77,7 @@ const modifyPass = async (email, data) => {
   );
   const mailOption = {
     from: config.EMAIL_FROM,
-    to: config.EMAIL_TO,
+    to: "ernitish26@gmail.com",
     subject: "Password Reset",
     text: "Password Reset successfully",
   };
@@ -94,23 +94,18 @@ const userlogin = async (data) => {
       config.ACCESS_TOKEN_SECRET,
       { expiresIn: config.ACCESS_TOKEN_EXPIRES }
     );
-    const refreshToken = jwt.sign(
-      {
-        username: userData.email,
-        id: userData.id,
-      },
-      config.REFRESH_TOKEN_SECRET,
-      { expiresIn: "1d" }
-    );
+    const refreshToken = randToken.uid(256);
 
     await userToken.create({
       user_id: userData.id,
       token: accessToken,
       expiry: config.JWT_EXPIRES_IN,
     });
-    await client.hSet("refreshToken", {
+
+    await client.hSet(refreshToken, {
+      id: userData.id,
       email: userData.email,
-      username: userData.username,
+      username:userData.username
     });
     return { accessToken, refreshToken };
   } else {
@@ -273,20 +268,21 @@ const findByAggregate = async () => {
   return data;
 };
 
-const generateToken = (RTemail) => {
-  // Correct token we send a new access token
-  userCredentials = User.findOne({where:{email:RTemail}})
+const generateToken = async (userData) => {
+
   const accessToken = jwt.sign(
-    {
-      username: userCredentials.username,
-      email: userCredentials.email,
-    },
-    process.env.ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: "10m",
-    }
+    { email: userData.email, id: userData.id },
+    config.ACCESS_TOKEN_SECRET,
+    { expiresIn: config.ACCESS_TOKEN_EXPIRES }
   );
-  return res.json({ accessToken });
+  const refreshToken = randToken.uid(256);
+  await client.hSet(refreshToken, {
+    id: userData.id,
+    email: userData.email,
+    username:userData.username
+  });
+
+  return { accessToken, refreshToken };
 };
 
 module.exports = {

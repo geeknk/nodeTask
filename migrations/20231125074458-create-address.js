@@ -11,11 +11,11 @@ module.exports = {
       },
       user_id: {
         type: Sequelize.INTEGER,
-        // references:{
-        //   model:"Users",
-        //   key:"id",
-        //   as:"id"
-        // }
+        references:{
+          model:"Users",
+          key:"id",
+          as:"user_id"
+        }
       },
       address: {
         type: Sequelize.STRING

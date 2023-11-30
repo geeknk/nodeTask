@@ -10,7 +10,8 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       User.hasMany(models.address, {
-        foreignKey:"user_id"
+        foreignKey:"user_id",
+        onDelete:"CASCADE"
       });
       User.hasOne(models.userToken);
     }

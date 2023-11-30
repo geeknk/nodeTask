@@ -1,7 +1,9 @@
 'use strict';
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-  async up(queryInterface, Sequelize) {
+  async up (queryInterface, Sequelize) {
+    
     await queryInterface.createTable('addresses', {
       id: {
         allowNull: false,
@@ -14,9 +16,8 @@ module.exports = {
         references:{
           model:"Users",
           key:"id",
-          as:"user_id"
         },
-        onDelete:"SET NULL"
+        onDelete: 'CASCADE',
       },
       address: {
         type: Sequelize.STRING
@@ -42,8 +43,19 @@ module.exports = {
         type: Sequelize.DATE
       }
     });
+
+      // address.belongsTo(models.User, {
+      //   foreignKey: "user_id",
+      //   onDelete:'NULL'
+      // });
   },
-  async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable('addresses');
+
+  async down (queryInterface, Sequelize) {
+    /**
+     * Add reverting commands here.
+     *
+     * Example:
+     * await queryInterface.dropTable('users');
+     */
   }
 };

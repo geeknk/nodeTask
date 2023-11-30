@@ -1,23 +1,31 @@
 const config = require("../config/constant");
-const { User } = require("../models");
-const { userToken } = require("../models");
-const { address } = require("../models");
+const { User,userToken,address } = require("../models");
+const { client } = require("../config/redisconfig");
+const { google } = require("googleapis");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const nodemailer = require("nodemailer");
 const axios = require("axios");
 const Cheerio = require("cheerio");
-const { client } = require("../config/redisconfig");
 const randToken = require("rand-token")
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  requireTLS: true,
+const oAuth2Client = new google.auth.OAuth2(config.CLIENT_ID,config.CLIENT_SECERET,config.REDIRECT_URI)
+oAuth2Client.setCredentials({ refresh_token:config.REFRESH_TOKEN })
+
+const accessToken = async () => {
+  const accesstoken = await oAuth2Client.getAccessToken();
+  return accesstoken
+}
+
+const transport = nodemailer.createTransport({
+  service:'gmail',
   auth: {
-    user: "ernitish26@gmail.com",
-    pass: config.EMAIL_PASS,
+    type: 'OAuth2',
+    user: config.USERNAME,
+    clientId: config.CLIENT_ID,
+    clientSecret: config.CLIENT_SECERET,
+    refreshToken: config.REFRESH_TOKEN,
+    accessToken: accessToken
   },
 });
 
@@ -30,8 +38,20 @@ const getdata = async (id) => {
   }
 };
 
-const deleteuser = async (ID) => {
-  const data = await User.destroy({ where: { id: ID } });
+const deleteuser = async (id) => {
+//   const data = await User.destroy({where:{id: id}},{
+//     include: [{
+//     model: address,
+//     where: { user_id: id },
+//   }]
+// });/
+const data = await address.destroy({where:{user_id: id}},{
+  include: [{
+  model: User,
+  where: { id: id },
+}]
+});
+await User.destroy({where:{id: id}})
   if (data) {
     return true;
   }
@@ -61,7 +81,7 @@ const verifyemail = async (data) => {
       subject: "Password Reset Link",
       html: `<a href = "www.google.com">${token}</a>`,
     };
-    transporter.sendMail(mailOption);
+    transport.sendMail(mailOption);
     return token;
   } else {
     return false;
@@ -81,7 +101,7 @@ const modifyPass = async (email, data) => {
     subject: "Password Reset",
     text: "Password Reset successfully",
   };
-  transporter.sendMail(mailOption);
+  transport.sendMail(mailOption);
 };
 
 const userlogin = async (data) => {
@@ -118,11 +138,11 @@ const usersignup = async (data) => {
   if (user) {
     const mailOption = {
       from: config.EMAIL_FROM,
-      to: config.EMAIL_TO,
+      to: 'rajaryan232326@gmail.com',
       subject: "Registration",
       text: "You Have been Registered successfully",
     };
-    transporter.sendMail(mailOption);
+    transport.sendMail(mailOption);
     return user;
   } else {
     return false;

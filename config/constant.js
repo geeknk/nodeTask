@@ -16,3 +16,7 @@ exports.EMAIL_PASS = process.env.pass
 exports.DB = process.env.database
 exports.USERNAME = process.env.username
 exports.PASS = process.env.password
+exports.CLIENT_ID = process.env.CLIENT_ID
+exports.CLIENT_SECERET = process.env.CLIENT_SECERET
+exports.REDIRECT_URI = process.env.REDIRECT_URI
+exports.REFRESH_TOKEN = process.env.REFRESH_TOKEN

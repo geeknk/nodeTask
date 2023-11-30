@@ -11,7 +11,6 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       address.belongsTo(models.User, {
         foreignKey: "user_id",
-        onDelete:'NULL'
       });
     }
   }

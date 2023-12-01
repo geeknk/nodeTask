@@ -58,10 +58,10 @@ exports.forgetPass = async (req, res) => {
 
 exports.updateuser = async (req, res) => {
   try {
-    await userServices.updateuser1(req.data.email , req.body);
-    res.status(201).send({success: "true", message: "user updated successfully" });
+    const resp = await userServices.updateuser1(req.data.email , req.body);
+    res.status(201).send({success: "true", message: "user updated successfully", resposne:resp });
   } catch (error) {
-    res.status(402).send({success: "false", message: "user not updated" });
+    res.status(402).send({success: "false", message:"user not updated"});
   }
 };
 

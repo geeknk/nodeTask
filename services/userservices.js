@@ -21,11 +21,11 @@ const transport = nodemailer.createTransport({
   service:'gmail',
   auth: {
     type: 'OAuth2',
-    user: config.USERNAME,
+    user: config.USER,
     clientId: config.CLIENT_ID,
     clientSecret: config.CLIENT_SECERET,
     refreshToken: config.REFRESH_TOKEN,
-    accessToken: accessToken
+    accessToken: accessToken()
   },
 });
 
@@ -57,8 +57,8 @@ await User.destroy({where:{id: id}})
   }
 };
 
-const updateuser1 = async (data, body_data) => {
-  await users.updateOne(data.email, body_data);
+const updateuser1 = async (email, body_data) => {
+  await User.update(body_data,{where:{email:email}});
 };
 
 const matchpass = async (data) => {
@@ -66,11 +66,11 @@ const matchpass = async (data) => {
 };
 
 const verifyemail = async (data) => {
-  const emailexist = await users.findOne({ email: data.email });
+  const emailexist = await User.findOne({where: {email: data.email}});
 
   if (emailexist) {
     const token = jwt.sign(
-      { email: emailexist.email, id: emailexist._id },
+      { email: emailexist.email,id:emailexist._id,username:emailexist.username },
       config.ACCESS_TOKEN_SECRET,
       { expiresIn: config.FPASS_EXPIRESIN }
     );
@@ -89,10 +89,9 @@ const verifyemail = async (data) => {
 };
 
 const modifyPass = async (email, data) => {
-  await users.updateOne(
-    { email },
-    {
-      password: data.password,
+  await User.update({password: data.password},
+    { 
+      where:{email:email}
     }
   );
   const mailOption = {
@@ -152,7 +151,7 @@ const usersignup = async (data) => {
 const user_list = async (page) => {
   const firstindex = (page - 1) * 10;
   const lastindex = page * 10;
-  const data = await users.find();
+  const data = await User.findAll();
   const sliced_data = data.slice(firstindex, lastindex);
   return sliced_data;
 };

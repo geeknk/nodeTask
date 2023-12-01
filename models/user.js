@@ -36,5 +36,16 @@ module.exports = (sequelize, DataTypes) => {
       console.log(error)
     } 
   });
+  
+  User.beforeUpdate(async function(user){
+    try {
+        const salt = 10;
+        const hashedpassword = await bcrypt.hash(user.password, salt);
+        user.password = hashedpassword
+    } catch (error) {
+      console.log(error)
+    } 
+  });
+  
   return User;
 };

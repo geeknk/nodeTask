@@ -20,3 +20,4 @@ exports.CLIENT_ID = process.env.CLIENT_ID
 exports.CLIENT_SECERET = process.env.CLIENT_SECERET
 exports.REDIRECT_URI = process.env.REDIRECT_URI
 exports.REFRESH_TOKEN = process.env.REFRESH_TOKEN
+exports.USER = process.env.USER
